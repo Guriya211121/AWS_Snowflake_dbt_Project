@@ -1,0 +1,24 @@
+{{ config(
+    materialized='incremental',
+    unique_key='HOST_ID'
+) }}
+SELECT 
+    HOST_ID,
+    REPLACE(HOST_NAME, ' ', '_') AS HOST_NAME,
+    HOST_SINCE,
+    IS_SUPERHOST,
+    RESPONSE_RATE,
+    CASE 
+    WHEN RESPONSE_RATE >95 THEN 'VERY GOOD'
+    WHEN RESPONSE_RATE >80 THEN 'GOOD'
+    WHEN RESPONSE_RATE >60 THEN 'FAIR'
+    ELSE 'POOR'
+    END AS RESPONSE_TAG,
+    CASE
+    WHEN HOST_SINCE < '2018-01-01' THEN 'LONG_TERM'
+    WHEN HOST_SINCE < '2020-01-01' THEN 'MEDIUM_TERM'
+    ELSE 'NEWBIE'
+    END AS HOST_TENURE,
+    CREATED_AT
+FROM
+    {{ ref('bronze_hosts') }}
